@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { SocietesModule } from './societes/societes.module';
 import { ProjetsModule } from './projets/projets.module';
 import { OffresModule } from './offres/offres.module';
+import { FacturesModule } from './factures/factures.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -47,6 +48,7 @@ MailerModule.forRootAsync({
     SocietesModule,
     ProjetsModule,
     OffresModule,
+    FacturesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
