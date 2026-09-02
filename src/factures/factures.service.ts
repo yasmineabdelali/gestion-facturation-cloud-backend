@@ -46,65 +46,65 @@ export class FacturesService {
 
     let lignes: LigneFacture[];
 
-    if (periodePrecedente) {
-      // Reprise automatique : on copie les lignes de la période précédente
-      lignes = periodePrecedente.lignes.map((l) =>
-        this.lignesRepository.create({
-          facture_id: factureSauvegardee.id,
-          ressource_offre_id: l.ressource_offre_id,
-          ressource_cloud: l.ressource_cloud,
-          unite: l.unite,
-          prix_unitaire: l.prix_unitaire,
-          quantite_consommee: l.quantite_consommee,
-          montant_ligne: Number(l.quantite_consommee) * Number(l.prix_unitaire),
-        }),
-      );
-    } else {
-      // Pas de période précédente : on préremplit depuis l'offre financière active
-      const offreActive = await this.offresRepository.findOne({
-        where: { projet_id: dto.projet_id, statut: StatutOffre.ACTIVE },
-        relations: { ressources: true },
-      });
+if (periodePrecedente && periodePrecedente.lignes.length > 0) {
+  lignes = periodePrecedente.lignes.map((l) =>
+    this.lignesRepository.create({
+      facture_id: factureSauvegardee.id,
+      ressource_offre_id: l.ressource_offre_id,
+      ressource_cloud: l.ressource_cloud,
+      unite: l.unite,
+      prix_unitaire: l.prix_unitaire,
+      quantite_consommee: l.quantite_consommee,
+      montant_ligne: Number(l.quantite_consommee) * Number(l.prix_unitaire),
+    }),
+  );
+} else {
+  const offreActive = await this.offresRepository.findOne({
+    where: { projet_id: dto.projet_id, statut: StatutOffre.ACTIVE },
+    relations: { ressources: true },
+  });
 
-      if (!offreActive || offreActive.ressources.length === 0) {
-        throw new BadRequestException("Aucune offre financière active pour ce projet — impossible de créer la facture");
-      }
+  if (!offreActive || offreActive.ressources.length === 0) {
+    throw new BadRequestException("Aucune offre financière active pour ce projet — impossible de créer la facture");
+  }
 
-      lignes = offreActive.ressources.map((r) =>
-        this.lignesRepository.create({
-          facture_id: factureSauvegardee.id,
-          ressource_offre_id: r.id,
-          ressource_cloud: r.ressource_cloud,
-          unite: r.unite,
-          prix_unitaire: r.prix_unitaire,
-          quantite_consommee: 0,
-          montant_ligne: 0,
-        }),
-      );
-    }
+  lignes = offreActive.ressources.map((r) =>
+    this.lignesRepository.create({
+      facture_id: factureSauvegardee.id,
+      ressource_offre_id: r.id,
+      ressource_cloud: r.ressource_cloud,
+      unite: r.unite,
+      prix_unitaire: r.prix_unitaire,
+      quantite_consommee: 0,
+      montant_ligne: 0,
+    }),
+  );
+}
 
-    await this.lignesRepository.save(lignes);
-
+await this.lignesRepository.save(lignes);
     return this.findOne(factureSauvegardee.id);
   }
 
-  private async findPeriodePrecedente(
-    projetId: number,
-    typePeriode: TypePeriode,
-    annee: number,
-    numeroPeriode: number,
-  ): Promise<Facture | null> {
-    // On cherche la dernière facture du même type, avant la période demandée (triée par année/numéro décroissant)
-    const factures = await this.facturesRepository.find({
-      where: { projet_id: projetId, type_periode: typePeriode },
-      relations: { lignes: true },
-      order: { annee: 'DESC', numero_periode: 'DESC' },
-    });
+private async findPeriodePrecedente(
+  projetId: number,
+  typePeriode: TypePeriode,
+  annee: number,
+  numeroPeriode: number,
+): Promise<Facture | null> {
+  const factures = await this.facturesRepository.find({
+    where: { projet_id: projetId, type_periode: typePeriode },
+    relations: { lignes: true },
+    order: { annee: 'DESC', numero_periode: 'DESC' },
+  });
 
-    return (
-      factures.find((f) => f.annee < annee || (f.annee === annee && f.numero_periode < numeroPeriode)) || null
-    );
-  }
+
+  const resultat = factures.find((f) =>
+    Number(f.annee) < annee || (Number(f.annee) === annee && Number(f.numero_periode) < numeroPeriode)
+  ) || null;
+
+
+  return resultat;
+}
 
   async findByProjet(projetId: number): Promise<Facture[]> {
     return this.facturesRepository.find({
