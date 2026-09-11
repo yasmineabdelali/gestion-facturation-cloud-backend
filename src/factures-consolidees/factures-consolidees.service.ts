@@ -80,6 +80,7 @@ export class FacturesConsolideesService {
   async findBySociete(societeId: number): Promise<FactureConsolidee[]> {
     return this.consolideesRepository.find({
       where: { societe_id: societeId },
+      relations: { factures: true },
       order: { annee: 'DESC', numero_periode: 'DESC' },
     });
   }
