@@ -10,6 +10,7 @@ import { SocietesModule } from './societes/societes.module';
 import { ProjetsModule } from './projets/projets.module';
 import { OffresModule } from './offres/offres.module';
 import { FacturesModule } from './factures/factures.module';
+import { FacturesConsolideesModule } from './factures-consolidees/factures-consolidees.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,6 +50,7 @@ MailerModule.forRootAsync({
     ProjetsModule,
     OffresModule,
     FacturesModule,
+    FacturesConsolideesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

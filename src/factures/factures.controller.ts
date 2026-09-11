@@ -6,8 +6,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
-
-@Controller('factures')
+import { Res } from '@nestjs/common';
+import type { Response } from 'express';@Controller('factures')
 @UseGuards(JwtAuthGuard)
 export class FacturesController {
   constructor(private readonly facturesService: FacturesService) {}
@@ -43,4 +43,19 @@ export class FacturesController {
   devalider(@Param('id', ParseIntPipe) id: number) {
     return this.facturesService.devaliderAdmin(id);
   }
+  //telechargement facture pdf
+  @Get(':id/pdf')
+async downloadPdf(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  await this.facturesService.genererPdf(id, res);
+}
+//exportation liste des facture  en excel
+@Get(':id/excel')
+async downloadExcel(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+  const facture = await this.facturesService.findOne(id);
+  const buffer = await this.facturesService.genererExcel(id);
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename=facture-${facture.type_periode}-${facture.numero_periode}-${facture.annee}.xlsx`);
+  res.send(buffer);
+}
 }

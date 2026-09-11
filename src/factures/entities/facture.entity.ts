@@ -1,12 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, OneToMany, Unique } from 'typeorm';
 import { Projet } from '../../projets/entities/projet.entity';
 import { LigneFacture } from './ligne-facture.entity';
-
-export enum TypePeriode {
-  MENSUELLE = 'mensuelle',
-  TRIMESTRIELLE = 'trimestrielle',
-  SEMESTRIELLE = 'semestrielle',
-}
+import { FactureConsolidee } from '../../factures-consolidees/entities/facture-consolidee.entity';
+import { TypePeriode } from '../../factures/entities/type-periode.enum';
 
 export enum StatutFacture {
   BROUILLON = 'brouillon',
@@ -56,4 +52,14 @@ export class Facture {
 
   @CreateDateColumn()
   date_creation: Date;
+
+
+  //Relation avec facture Consolidee
+  @ManyToOne(() => FactureConsolidee, (fc) => fc.factures, { nullable: true, onDelete: 'SET NULL' })
+@JoinColumn({ name: 'facture_consolidee_id' })
+factureConsolidee: FactureConsolidee;
+
+@Column({ nullable: true })
+facture_consolidee_id: number | null;
+
 }

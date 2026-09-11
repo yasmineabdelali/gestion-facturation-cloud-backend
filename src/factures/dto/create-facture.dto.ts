@@ -1,6 +1,5 @@
 import { IsNotEmpty, IsEnum, IsNumber, Min, Max } from 'class-validator';
-import { TypePeriode } from '../entities/facture.entity';
-
+import { TypePeriode } from '../entities/type-periode.enum';
 export class CreateFactureDto {
   @IsNotEmpty()
   @IsNumber()
