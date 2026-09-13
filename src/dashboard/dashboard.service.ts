@@ -47,4 +47,17 @@ export class DashboardService {
       montantTotalFacture,
     };
   }
+
+  async getRepartitionFactures() {
+   const validees = await this.facturesRepository.count({
+    where: { statut: StatutFacture.VALIDEE},
+   }) ; 
+      const enAttente = await this.facturesRepository.count({
+    where: { statut: StatutFacture.BROUILLON},
+   }) ; 
+   return {
+    labels: ['Validées','En attente'],
+    series: [validees , enAttente],
+   };
+}
 }

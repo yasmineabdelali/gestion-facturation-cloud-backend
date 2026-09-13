@@ -12,4 +12,9 @@ export class DashboardController {
     {
         return this.DashboardService.getIndicateurs();
     }
+
+    @Get('repartition-factures')
+    getRepartitionFactures() {
+        return this.DashboardService.getRepartitionFactures();
+    }
 }
