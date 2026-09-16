@@ -5,7 +5,7 @@ import { FactureConsolidee } from './entities/facture-consolidee.entity';
 import { Facture, StatutFacture } from '../factures/entities/facture.entity';
 import { Societe } from '../societes/entities/societe.entity';
 import { CreateFactureConsolideeDto } from './dto/create-facture-consolidee.dto';
-
+import { TypePeriode } from '../factures/entities/type-periode.enum';
 @Injectable()
 export class FacturesConsolideesService {
   constructor(
@@ -95,4 +95,29 @@ export class FacturesConsolideesService {
     }
     return consolidee;
   }
+//recherche des factures consolides 
+async search(filtres: { client?: string; typePeriode?: TypePeriode; annee?: number; numeroPeriode?: number }) {
+  const query = this.consolideesRepository
+    .createQueryBuilder('consolidee')
+    .leftJoinAndSelect('consolidee.societe', 'societe');
+
+  if (filtres.client) {
+    query.andWhere('societe.nom LIKE :client', { client: `%${filtres.client}%` });
+  }
+
+  if (filtres.typePeriode) {
+    query.andWhere('consolidee.type_periode = :typePeriode', { typePeriode: filtres.typePeriode });
+  }
+
+  if (filtres.annee) {
+    query.andWhere('consolidee.annee = :annee', { annee: filtres.annee });
+  }
+
+  if (filtres.numeroPeriode) {
+    query.andWhere('consolidee.numero_periode = :numeroPeriode', { numeroPeriode: filtres.numeroPeriode });
+  }
+
+  return query.orderBy('consolidee.annee', 'DESC').addOrderBy('consolidee.numero_periode', 'DESC').getMany();
+}
+
 }

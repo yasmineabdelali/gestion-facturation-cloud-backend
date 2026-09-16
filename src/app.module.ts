@@ -12,6 +12,7 @@ import { OffresModule } from './offres/offres.module';
 import { FacturesModule } from './factures/factures.module';
 import { FacturesConsolideesModule } from './factures-consolidees/factures-consolidees.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { RechercheModule } from './recherche/recherche.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -53,6 +54,7 @@ MailerModule.forRootAsync({
     FacturesModule,
     FacturesConsolideesModule,
     DashboardModule,
+    RechercheModule,
   ],
   controllers: [AppController],
   providers: [AppService],

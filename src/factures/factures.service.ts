@@ -273,4 +273,37 @@ async genererExcel(id: number): Promise<ExcelJS.Buffer> {
   const buffer = await workbook.xlsx.writeBuffer();
   return buffer;
 }
+
+//methode de rechereche des factures individuelles 
+async search(filtres: { client?: string; so?: string; typePeriode?: TypePeriode; annee?: number; numeroPeriode?: number }) {
+  const query = this.facturesRepository
+    .createQueryBuilder('facture')
+    .leftJoinAndSelect('facture.projet', 'projet')
+    .leftJoinAndSelect('projet.societe', 'societe');
+
+  if (filtres.client) {
+    query.andWhere('societe.nom LIKE :client', { client: `%${filtres.client}%` });
+  }
+
+  if (filtres.so) {
+    query.andWhere('(projet.numero_so LIKE :so OR projet.nom_projet LIKE :so)', { so: `%${filtres.so}%` });
+  }
+
+  if (filtres.typePeriode) {
+    query.andWhere('facture.type_periode = :typePeriode', { typePeriode: filtres.typePeriode });
+  }
+
+  if (filtres.annee) {
+    query.andWhere('facture.annee = :annee', { annee: filtres.annee });
+  }
+
+  if (filtres.numeroPeriode) {
+    query.andWhere('facture.numero_periode = :numeroPeriode', { numeroPeriode: filtres.numeroPeriode });
+  }
+
+  return query.orderBy('facture.annee', 'DESC').addOrderBy('facture.numero_periode', 'DESC').getMany();
+}
+
+
+
 }
