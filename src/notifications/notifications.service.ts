@@ -20,7 +20,7 @@ export class NotificationsService {
     const maintenant = new Date();
     const dernierJourDuMois = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0).getDate();
     const jourActuel = maintenant.getDate();
-const estFinDeMois = jourActuel >= dernierJourDuMois - 15; // test large, à remettre à -4 après
+const estFinDeMois = jourActuel >= dernierJourDuMois - 4; // pour tester met -15
     return {
       estFinDeMois,
       count: factures.length,

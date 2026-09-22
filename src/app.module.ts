@@ -14,6 +14,11 @@ import { FacturesConsolideesModule } from './factures-consolidees/factures-conso
 import { DashboardModule } from './dashboard/dashboard.module';
 import { RechercheModule } from './recherche/recherche.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditModule } from './audit/audit.module';
+import { AuditInterceptor } from './audit/audit.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { StatistiquesModule } from './statistiques/statistiques.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,8 +62,15 @@ MailerModule.forRootAsync({
     DashboardModule,
     RechercheModule,
     NotificationsModule,
+    AuditModule,
+    StatistiquesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+        {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
+  ],
 })
 export class AppModule {}

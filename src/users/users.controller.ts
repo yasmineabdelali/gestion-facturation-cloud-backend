@@ -18,17 +18,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';      // ← LIGNE 
 import { RolesGuard } from '../auth/guards/roles.guard';           // ← LIGNE AJOUTÉE
 import { Roles } from '../auth/decorators/roles.decorator';        // ← LIGNE AJOUTÉE
 import { UserRole } from './entities/user.entity';                 // ← LIGNE AJOUTÉE
+import { Audit } from '../audit/audit.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
+	@Audit('CREATE', 'User')
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)    // ← LIGNE AJOUTÉE
+  @UseGuards(JwtAuthGuard, RolesGuard)    // ← LIGNE AJOUTÉE
   @Roles(UserRole.ADMIN)                  // ← LIGNE AJOUTÉE
   @Get()
   findAll() {
@@ -36,7 +37,7 @@ export class UsersController {
   }
 
 
-   @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
@@ -44,13 +45,15 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @Audit('UPDATE', 'User')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, dto);
   }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)    // ← LIGNE AJOUTÉE
+  @UseGuards(JwtAuthGuard, RolesGuard)    // ← LIGNE AJOUTÉE
   @Roles(UserRole.ADMIN)                  // ← LIGNE AJOUTÉE
   @Delete(':id')
+  @Audit('DELETE', 'User')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);

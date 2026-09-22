@@ -8,6 +8,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { TypePeriode } from './entities/type-periode.enum';
 import type { Response } from 'express';
+import { Audit } from '../audit/audit.decorator';
 
 @Controller('factures')
 @UseGuards(JwtAuthGuard)
@@ -15,6 +16,7 @@ export class FacturesController {
   constructor(private readonly facturesService: FacturesService) {}
 
   @Post()
+  @Audit('CREATE', 'Facture')
   create(@Body() dto: CreateFactureDto) {
     return this.facturesService.create(dto);
   }
@@ -51,11 +53,13 @@ export class FacturesController {
   }
 
   @Patch(':id/lignes')
+  @Audit('UPDATE_LIGNES', 'Facture')
   updateLignes(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateLignesDto) {
     return this.facturesService.updateLignes(id, dto);
   }
 
   @Patch(':id/valider')
+  @Audit('VALIDER', 'Facture')
   valider(@Param('id', ParseIntPipe) id: number) {
     return this.facturesService.valider(id);
   }
@@ -63,6 +67,7 @@ export class FacturesController {
   @Patch(':id/devalider')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
+  @Audit('DEVALIDER', 'Facture')
   devalider(@Param('id', ParseIntPipe) id: number) {
     return this.facturesService.devaliderAdmin(id);
   }

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Body, ParseIntPipe, UseGuards } from '@ne
 import { FacturesConsolideesService } from './factures-consolidees.service';
 import { CreateFactureConsolideeDto } from './dto/create-facture-consolidee.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Audit } from '../audit/audit.decorator';
 
 @Controller('factures-consolidees')
 @UseGuards(JwtAuthGuard)
@@ -9,6 +10,7 @@ export class FacturesConsolideesController {
   constructor(private readonly facturesConsolideesService: FacturesConsolideesService) {}
 
   @Post()
+  	@Audit('CREATE', 'FactureConsolidee')
   create(@Body() dto: CreateFactureConsolideeDto) {
     return this.facturesConsolideesService.create(dto);
   }

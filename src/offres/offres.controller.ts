@@ -12,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { OffresService } from './offres.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Audit } from '../audit/audit.decorator';
 
 @Controller('offres')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +21,7 @@ export class OffresController {
 
   @Post('import/:projetId')
   @UseInterceptors(FileInterceptor('file'))
+  @Audit('IMPORT_OFFRE', 'Offre')
   importOffre(@Param('projetId', ParseIntPipe) projetId: number, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Aucun fichier reçu');

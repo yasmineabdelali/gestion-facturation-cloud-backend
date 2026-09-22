@@ -16,12 +16,13 @@ import { ProjetsService } from './projets.service';
 import { CreateProjetDto } from './dto/create-projet.dto';
 import { UpdateProjetDto } from './dto/update-projet.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Audit } from '../audit/audit.decorator';
 
 @Controller('projets')
 @UseGuards(JwtAuthGuard)
 export class ProjetsController {
   constructor(private readonly projetsService: ProjetsService) {}
-
+@Audit('CREATE', 'Projet')
   @Post()
   create(@Body() dto: CreateProjetDto) {
     return this.projetsService.create(dto);
@@ -39,12 +40,12 @@ export class ProjetsController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.projetsService.findOne(id);
   }
-
+@Audit('UPDATE', 'Projet')
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProjetDto) {
     return this.projetsService.update(id, dto);
   }
-
+@Audit('DELETE', 'Projet')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
