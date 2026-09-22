@@ -13,6 +13,11 @@ export class FacturesConsolideesController {
     return this.facturesConsolideesService.create(dto);
   }
 
+  @Get()
+  findAll() {
+    return this.facturesConsolideesService.findAll();
+  }
+
   @Get('societe/:societeId')
   findBySociete(@Param('societeId', ParseIntPipe) societeId: number) {
     return this.facturesConsolideesService.findBySociete(societeId);

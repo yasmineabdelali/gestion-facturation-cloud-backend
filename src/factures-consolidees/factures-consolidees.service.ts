@@ -84,7 +84,12 @@ export class FacturesConsolideesService {
       order: { annee: 'DESC', numero_periode: 'DESC' },
     });
   }
-
+async findAll(): Promise<FactureConsolidee[]> {
+  return this.consolideesRepository.find({
+    relations: { societe: true, factures: true },
+    order: { annee: 'DESC', numero_periode: 'DESC' },
+  });
+}
   async findOne(id: number): Promise<FactureConsolidee> {
     const consolidee = await this.consolideesRepository.findOne({
       where: { id },

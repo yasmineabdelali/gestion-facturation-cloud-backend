@@ -78,8 +78,8 @@ if (periodePrecedente && periodePrecedente.lignes.length > 0) {
       ressource_cloud: r.ressource_cloud,
       unite: r.unite,
       prix_unitaire: r.prix_unitaire,
-      quantite_consommee: 0,
-      montant_ligne: 0,
+      quantite_consommee: Number(r.quantite),
+      montant_ligne: Number(r.quantite) * Number(r.prix_unitaire),
     }),
   );
 }
@@ -115,6 +115,12 @@ private async findPeriodePrecedente(
       order: { annee: 'DESC', numero_periode: 'DESC' },
     });
   }
+  async findAll(): Promise<Facture[]> {
+  return this.facturesRepository.find({
+    relations: { projet: { societe: true } },
+    order: { date_creation: 'DESC' },
+  });
+}
 
   async findOne(id: number): Promise<Facture> {
     const facture = await this.facturesRepository.findOne({
@@ -302,6 +308,49 @@ async search(filtres: { client?: string; so?: string; typePeriode?: TypePeriode;
   }
 
   return query.orderBy('facture.annee', 'DESC').addOrderBy('facture.numero_periode', 'DESC').getMany();
+}
+
+async comparaisonPrevueReelle(projetId: number, typePeriode?: TypePeriode, annee?: number, numeroPeriode?: number) {
+  const offreActive = await this.offresRepository.findOne({
+    where: { projet_id: projetId, statut: StatutOffre.ACTIVE },
+    relations: { ressources: true },
+  });
+
+  if (!offreActive) {
+    throw new BadRequestException('Aucune offre financière active pour ce projet');
+  }
+
+  let facture: Facture | null;
+
+  if (typePeriode && annee && numeroPeriode) {
+    facture = await this.facturesRepository.findOne({
+      where: { projet_id: projetId, type_periode: typePeriode, annee, numero_periode: numeroPeriode },
+      relations: { lignes: true },
+    });
+  } else {
+    facture = await this.facturesRepository.findOne({
+      where: { projet_id: projetId },
+      relations: { lignes: true },
+      order: { date_creation: 'DESC' },
+    });
+  }
+
+  const comparaison = offreActive.ressources.map((ressource) => {
+    const ligne = facture?.lignes.find((l) => l.ressource_offre_id === ressource.id);
+    return {
+      ressource_cloud: ressource.ressource_cloud,
+      unite: ressource.unite,
+      quantite_prevue: Number(ressource.quantite),
+      quantite_reelle: ligne ? Number(ligne.quantite_consommee) : 0,
+    };
+  });
+
+  return {
+    facture: facture
+      ? { id: facture.id, type_periode: facture.type_periode, annee: facture.annee, numero_periode: facture.numero_periode }
+      : null,
+    comparaison,
+  };
 }
 
 
