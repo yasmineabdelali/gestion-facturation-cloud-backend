@@ -5,6 +5,9 @@ import { Societe } from '../societes/entities/societe.entity';
 import { Projet } from '../projets/entities/projet.entity';
 import { Facture, StatutFacture } from '../factures/entities/facture.entity';
 import { TypePeriode } from '../factures/entities/type-periode.enum';
+import { TauxChangeService } from '../taux-change/taux-change.service';
+import { Devise } from '../common/enums/devise.enum';
+
 @Injectable()
 export class DashboardService {
   constructor(
@@ -14,31 +17,34 @@ export class DashboardService {
     private projetsRepository: Repository<Projet>,
     @InjectRepository(Facture)
     private facturesRepository: Repository<Facture>,
+    private tauxChangeService: TauxChangeService,
   ) {}
 
-async getIndicateurs(typePeriode: TypePeriode = TypePeriode.MENSUELLE) {
-      const nombreSocietes = await this.societesRepository.count();
+  async getIndicateurs(typePeriode: TypePeriode = TypePeriode.MENSUELLE) {
+    const nombreSocietes = await this.societesRepository.count();
 
     const nombreProjetsActifs = await this.projetsRepository.count({
       where: { statut: 'actif' as any },
     });
 
     const nombreFacturesEnAttente = await this.facturesRepository.count({
-      where: { statut: StatutFacture.BROUILLON , type_periode: typePeriode},
+      where: { statut: StatutFacture.BROUILLON, type_periode: typePeriode },
     });
 
     const nombreFacturesValidees = await this.facturesRepository.count({
-      where: { statut: StatutFacture.VALIDEE , type_periode: typePeriode },
+      where: { statut: StatutFacture.VALIDEE, type_periode: typePeriode },
     });
 
-    const result = await this.facturesRepository
-      .createQueryBuilder('facture')
-      .select('SUM(facture.montant_total)', 'total')
-      .where('facture.statut = :statut', { statut: StatutFacture.VALIDEE })
-      .andWhere('facture.type_periode = :typePeriode', { typePeriode })
-      .getRawOne();
+    // Conversion multi-devises : on récupère chaque facture validée avec sa devise propre
+const facturesValidees = await this.facturesRepository.find({
+  where: { statut: StatutFacture.VALIDEE, type_periode: typePeriode },
+  select: { montant_total: true, devise: true },
+});
 
-    const montantTotalFacture = Number(result?.total) || 0;
+    let montantTotalFacture = 0;
+    for (const f of facturesValidees) {
+      montantTotalFacture += await this.tauxChangeService.convertirVersTnd(Number(f.montant_total), f.devise as Devise);
+    }
 
     return {
       nombreSocietes,
@@ -46,38 +52,45 @@ async getIndicateurs(typePeriode: TypePeriode = TypePeriode.MENSUELLE) {
       nombreFacturesEnAttente,
       nombreFacturesValidees,
       montantTotalFacture,
+      deviseAffichage: 'TND', // indique au front que ce montant agrégé est toujours en TND
     };
   }
 
   async getRepartitionFactures() {
-   const validees = await this.facturesRepository.count({
-    where: { statut: StatutFacture.VALIDEE},
-   }) ; 
-      const enAttente = await this.facturesRepository.count({
-    where: { statut: StatutFacture.BROUILLON},
-   }) ; 
-   return {
-    labels: ['Validées','En attente'],
-    series: [validees , enAttente],
-   };
-}
+    const validees = await this.facturesRepository.count({
+      where: { statut: StatutFacture.VALIDEE },
+    });
+    const enAttente = await this.facturesRepository.count({
+      where: { statut: StatutFacture.BROUILLON },
+    });
+    return {
+      labels: ['Validées', 'En attente'],
+      series: [validees, enAttente],
+    };
+  }
 
-async getMontantParSociete(typePeriode: TypePeriode = TypePeriode.MENSUELLE) {
-  const result = await this.facturesRepository
-    .createQueryBuilder('facture')
-    .innerJoin('facture.projet', 'projet')
-    .innerJoin('projet.societe', 'societe')
-    .select('societe.nom', 'nom')
-    .addSelect('SUM(facture.montant_total)', 'total')
-    .where('facture.statut = :statut', { statut: StatutFacture.VALIDEE })
-    .andWhere('facture.type_periode = :typePeriode', { typePeriode })
-    .groupBy('societe.id')
-    .addGroupBy('societe.nom')
-    .getRawMany();
+  async getMontantParSociete(typePeriode: TypePeriode = TypePeriode.MENSUELLE) {
+    const result = await this.facturesRepository
+      .createQueryBuilder('facture')
+      .innerJoin('facture.projet', 'projet')
+      .innerJoin('projet.societe', 'societe')
+      .select('societe.nom', 'nom')
+      .addSelect('facture.montant_total', 'montant')
+      .addSelect('facture.devise', 'devise')
+      .where('facture.statut = :statut', { statut: StatutFacture.VALIDEE })
+      .andWhere('facture.type_periode = :typePeriode', { typePeriode })
+      .getRawMany();
 
-  return {
-    labels: result.map((r) => r.nom),
-    series: result.map((r) => Number(r.total)),
-  };
-}
+    const totauxParSociete = new Map<string, number>();
+
+    for (const row of result) {
+      const montantConverti = await this.tauxChangeService.convertirVersTnd(Number(row.montant), row.devise as Devise);
+      totauxParSociete.set(row.nom, (totauxParSociete.get(row.nom) ?? 0) + montantConverti);
+    }
+
+    return {
+      labels: Array.from(totauxParSociete.keys()),
+      series: Array.from(totauxParSociete.values()),
+    };
+  }
 }

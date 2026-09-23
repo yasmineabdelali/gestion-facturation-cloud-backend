@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Projet } from '../../projets/entities/projet.entity';
 import { RessourceOffre } from './ressource-offre.entity';
-
+import { Devise } from '../../common/enums/devise.enum';
 export enum StatutOffre {
   ACTIVE = 'active',
   ARCHIVEE = 'archivee',
@@ -31,6 +31,9 @@ export class OffreFinanciere {
     default: StatutOffre.ACTIVE,
   })
   statut: StatutOffre;
+
+  @Column({ type: 'enum', enum: Devise, default: Devise.TND })
+  devise: Devise;
 
   @OneToMany(() => RessourceOffre, (ressource) => ressource.offre)
   ressources: RessourceOffre[];

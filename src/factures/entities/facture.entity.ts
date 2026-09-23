@@ -3,6 +3,7 @@ import { Projet } from '../../projets/entities/projet.entity';
 import { LigneFacture } from './ligne-facture.entity';
 import { FactureConsolidee } from '../../factures-consolidees/entities/facture-consolidee.entity';
 import { TypePeriode } from '../../factures/entities/type-periode.enum';
+import { Devise } from '../../common/enums/devise.enum';
 
 export enum StatutFacture {
   BROUILLON = 'brouillon',
@@ -44,6 +45,9 @@ export class Facture {
   @Column('decimal', { precision: 12, scale: 2, default: 0 })
   montant_total: number;
 
+  @Column({ type: 'enum', enum: Devise, default: Devise.TND })
+  devise: Devise;
+
   @Column({ type: 'timestamp', nullable: true })
   date_validation: Date | null;
 
@@ -53,13 +57,10 @@ export class Facture {
   @CreateDateColumn()
   date_creation: Date;
 
-
-  //Relation avec facture Consolidee
   @ManyToOne(() => FactureConsolidee, (fc) => fc.factures, { nullable: true, onDelete: 'SET NULL' })
-@JoinColumn({ name: 'facture_consolidee_id' })
-factureConsolidee: FactureConsolidee;
+  @JoinColumn({ name: 'facture_consolidee_id' })
+  factureConsolidee: FactureConsolidee;
 
-@Column({ nullable: true })
-facture_consolidee_id: number | null;
-
+  @Column({ nullable: true })
+  facture_consolidee_id: number | null;
 }

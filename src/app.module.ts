@@ -18,6 +18,7 @@ import { AuditModule } from './audit/audit.module';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { StatistiquesModule } from './statistiques/statistiques.module';
+import { TauxChangeModule } from './taux-change/taux-change.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ MailerModule.forRootAsync({
     NotificationsModule,
     AuditModule,
     StatistiquesModule,
+    TauxChangeModule,
   ],
   controllers: [AppController],
   providers: [AppService,

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Societe } from './entities/societe.entity';
 import { CreateSocieteDto } from './dto/create-societe.dto';
 import { UpdateSocieteDto } from './dto/update-societe.dto';
+import { Devise } from '../common/enums/devise.enum';
 
 @Injectable()
 export class SocietesService {
@@ -13,8 +14,8 @@ export class SocietesService {
   ) {}
 
   async create(dto: CreateSocieteDto): Promise<Societe> {
-        const existingNom = await this.societesRepository.findOne({ where: { nom: dto.nom } });
-       if (existingNom) {
+    const existingNom = await this.societesRepository.findOne({ where: { nom: dto.nom } });
+    if (existingNom) {
       throw new ConflictException('Une société avec ce nom existe déjà');
     }
     const existing = await this.societesRepository.findOne({ where: { email: dto.email } });
@@ -22,7 +23,10 @@ export class SocietesService {
       throw new ConflictException('Une société avec cet email existe déjà');
     }
 
-    const societe = this.societesRepository.create(dto);
+    const societe = this.societesRepository.create({
+      ...dto,
+      devise: dto.devise ?? Devise.TND,
+    });
     return this.societesRepository.save(societe);
   }
 
@@ -42,7 +46,8 @@ export class SocietesService {
 
   async update(id: number, dto: UpdateSocieteDto): Promise<Societe> {
     const societe = await this.findOne(id);
-        if (dto.nom && dto.nom !== societe.nom) {
+
+    if (dto.nom && dto.nom !== societe.nom) {
       const existingNom = await this.societesRepository.findOne({ where: { nom: dto.nom } });
       if (existingNom) {
         throw new ConflictException('Une société avec ce nom existe déjà');

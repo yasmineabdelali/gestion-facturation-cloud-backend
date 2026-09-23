@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, IsEmail, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString,IsEnum, IsEmail, MaxLength } from 'class-validator';
+import { Devise } from '../../common/enums/devise.enum';
 
 export class CreateSocieteDto {
   @IsNotEmpty()
@@ -25,4 +26,8 @@ export class CreateSocieteDto {
   @IsString()
   @MaxLength(100)
   personne_contact?: string;
+
+  @IsOptional()
+  @IsEnum(Devise)
+  devise?: Devise;
 }
